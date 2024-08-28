@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediScan 🥼</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <style>
+        body {
+            padding-top: 20px;
+        }
+        .container {
+            max-width: 800px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        .footer {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            font-size: 12px;
+            color: #777;
+        }
+        .disclaimer {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            background-color: #ffe6e6;
+            color: #cc0000;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>MediScan 🥼</h1>
+        <p>Welcome to MediScan. Please select your symptoms from the list below to get a prediction of the possible disease.</p>
+
+        <!-- Form for symptom selection -->
+        <form id="predict-form" action="/predict" method="POST">
+            <div class="form-group">
+                <label for="symptoms">Select your symptoms:</label>
+                <select id="symptoms" name="symptoms" class="form-control" multiple>
+                    {% for symptom in symptoms %}
+                    <option value="{{ symptom }}">{{ symptom }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Submit button to make a prediction -->
+            <button type="submit" class="btn btn-primary">Predict</button>
+        </form>
+
+        <!-- Area to display the prediction result -->
+        <div id="result" class="mt-4">
+            {% if disease %}
+            <h3>The predicted disease is: {{ disease }}</h3>
+            {% endif %}
+        </div>
+
+        <h2>Data Insights</h2>
+        <div class="chart-container">
+            <canvas id="symptom-chart"></canvas>
+        </div>
+
+        <div class="disclaimer mt-4">
+            <strong>Disclaimer:</strong> This project is for educational purposes only. It is not intended for medical diagnosis or treatment. The predictions provided are based on a machine learning model trained on synthetic data and should not be used as a substitute for professional medical advice. The author does not take responsibility for any misuse of the information provided.
+        </div>
+
+        <div class="footer">Made by Vedant 💖</div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#symptoms').select2({
+                placeholder: 'Select symptoms',
+                allowClear: true
+            });
+
+            fetchDataInsights();
+        });
+
+        function fetchDataInsights() {
+            fetch('/data_insights')
+                .then(response => response.json())
+                .then(data => {
+                    const labels = data.map(item => item.Symptom);
+                    const counts = data.map(item => item.Count);
+
+                    const ctx = document.getElementById('symptom-chart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'Frequency',
+                                data: counts,
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                x: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>
